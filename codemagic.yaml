@@ -19,7 +19,7 @@ workflows:
       - name: Install dependencies
         script: |
           cd DietScan
-          npm ci
+          npm ci --legacy-peer-deps
       - name: Prebuild (generate native android project)
         script: |
           cd DietScan
@@ -57,7 +57,7 @@ workflows:
       - name: Install dependencies
         script: |
           cd DietScan
-          npm ci
+          npm ci --legacy-peer-deps
       - name: Prebuild (generate native android project)
         script: |
           cd DietScan
@@ -98,7 +98,7 @@ workflows:
       - name: Install dependencies
         script: |
           cd DietScan
-          npm ci
+          npm ci --legacy-peer-deps
       - name: Prebuild (generate native ios project)
         script: |
           cd DietScan
@@ -155,7 +155,7 @@ workflows:
       - name: Install dependencies
         script: |
           cd DietScan
-          npm ci
+          npm ci --legacy-peer-deps
       - name: Prebuild (generate native ios project)
         script: |
           cd DietScan
