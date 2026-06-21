@@ -137,7 +137,7 @@ workflows:
           cd DietScan/ios/build/Build/Products/Debug-iphoneos
           mkdir -p Payload
           cp -r *.app Payload/
-          zip -r DietScan-dev-unsigned.ipa Payload
+          zip -r DietScan-dev.ipa Payload
       - name: Push IPA to GitHub
         script: |
           git config --global user.email "codemagic-bot@dietscan.com"
@@ -146,8 +146,8 @@ workflows:
           BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
           cd "$CM_BUILD_DIR"
           mkdir -p Runnables
-          cp DietScan/ios/build/Build/Products/Debug-iphoneos/DietScan-dev-unsigned.ipa Runnables/DietScan-dev-unsigned.ipa
-          git add Runnables/DietScan-dev-unsigned.ipa
+          cp DietScan/ios/build/Build/Products/Debug-iphoneos/DietScan-dev.ipa Runnables/DietScan-dev.ipa
+          git add Runnables/DietScan-dev.ipa
           git commit -m "ci: add iOS dev IPA [skip ci]"
           git push origin "$BRANCH_NAME"
     artifacts:
@@ -201,7 +201,7 @@ workflows:
           cd DietScan/ios/build/Build/Products/Release-iphoneos
           mkdir -p Payload
           cp -r *.app Payload/
-          zip -r DietScan-unsigned.ipa Payload
+          zip -r DietScan.ipa Payload
       - name: Push IPA to GitHub
         script: |
           git config --global user.email "codemagic-bot@dietscan.com"
@@ -210,8 +210,8 @@ workflows:
           BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
           cd "$CM_BUILD_DIR"
           mkdir -p Runnables
-          cp DietScan/ios/build/Build/Products/Release-iphoneos/DietScan-unsigned.ipa Runnables/DietScan-release-unsigned.ipa
-          git add Runnables/DietScan-release-unsigned.ipa
+          cp DietScan/ios/build/Build/Products/Release-iphoneos/DietScan.ipa Runnables/DietScan-release.ipa
+          git add Runnables/DietScan-release.ipa
           git commit -m "ci: add iOS release IPA [skip ci]"
           git push origin "$BRANCH_NAME"
     artifacts:
