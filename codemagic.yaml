@@ -1,12 +1,5 @@
-## codemagic.yaml — DietScan
-## Mirrors the CareerLog pipeline: 4 workflows (Android dev/release, iOS dev/release),
-## unsigned IPAs for AltStore sideloading, dynamic bundle ID via app.config.js (APP_VARIANT).
-
 workflows:
-
-  # ---------------------------------------------------------------------
-  # ANDROID — DEV
-  # ---------------------------------------------------------------------
+  # ANDROID DEV
   android-dev:
     name: DietScan - Android Dev
     max_build_duration: 60
@@ -42,9 +35,7 @@ workflows:
             mkdir -p "$OUTPUT_DIR"
             cp android/app/build/outputs/apk/debug/*.apk "$OUTPUT_DIR"/
 
-  # ---------------------------------------------------------------------
-  # ANDROID — RELEASE
-  # ---------------------------------------------------------------------
+  # ANDROID RELEASE
   android-release:
     name: DietScan - Android Release
     max_build_duration: 60
@@ -80,9 +71,7 @@ workflows:
             mkdir -p "$OUTPUT_DIR"
             cp android/app/build/outputs/apk/release/*.apk "$OUTPUT_DIR"/
 
-  # ---------------------------------------------------------------------
-  # iOS — DEV (unsigned IPA for AltStore)
-  # ---------------------------------------------------------------------
+  # iOS DEV 
   ios-dev:
     name: DietScan - iOS Dev
     max_build_duration: 90
@@ -137,9 +126,7 @@ workflows:
             mkdir -p "$OUTPUT_DIR"
             cp ios/build/Build/Products/Debug-iphoneos/*.ipa "$OUTPUT_DIR"/
 
-  # ---------------------------------------------------------------------
-  # iOS — RELEASE (unsigned IPA for AltStore)
-  # ---------------------------------------------------------------------
+  # iOS RELEASE
   ios-release:
     name: DietScan - iOS Release
     max_build_duration: 90
