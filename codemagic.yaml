@@ -18,22 +18,24 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
+          cd DietScan
           npm ci
       - name: Prebuild (generate native android project)
         script: |
+          cd DietScan
           npx expo prebuild --platform android --clean
       - name: Build debug APK
         script: |
-          cd android
+          cd DietScan/android
           ./gradlew assembleDebug
     artifacts:
-      - android/app/build/outputs/apk/debug/*.apk
+      - DietScan/android/app/build/outputs/apk/debug/*.apk
     publishing:
       scripts:
         - name: Copy to Runnables
           script: |
             mkdir -p "$OUTPUT_DIR"
-            cp android/app/build/outputs/apk/debug/*.apk "$OUTPUT_DIR"/
+            cp DietScan/android/app/build/outputs/apk/debug/*.apk "$OUTPUT_DIR"/
 
   # ANDROID RELEASE
   android-release:
@@ -49,29 +51,31 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: "main"
+        - pattern: "master"
           include: true
     scripts:
       - name: Install dependencies
         script: |
+          cd DietScan
           npm ci
       - name: Prebuild (generate native android project)
         script: |
+          cd DietScan
           npx expo prebuild --platform android --clean
       - name: Build release APK (unsigned)
         script: |
-          cd android
+          cd DietScan/android
           ./gradlew assembleRelease
     artifacts:
-      - android/app/build/outputs/apk/release/*.apk
+      - DietScan/android/app/build/outputs/apk/release/*.apk
     publishing:
       scripts:
         - name: Copy to Runnables
           script: |
             mkdir -p "$OUTPUT_DIR"
-            cp android/app/build/outputs/apk/release/*.apk "$OUTPUT_DIR"/
+            cp DietScan/android/app/build/outputs/apk/release/*.apk "$OUTPUT_DIR"/
 
-  # iOS DEV 
+  # iOS DEV
   ios-dev:
     name: DietScan - iOS Dev
     max_build_duration: 90
@@ -93,16 +97,18 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
+          cd DietScan
           npm ci
       - name: Prebuild (generate native ios project)
         script: |
+          cd DietScan
           npx expo prebuild --platform ios --clean
       - name: Install pods
         script: |
-          cd ios && pod install
+          cd DietScan/ios && pod install
       - name: Build unsigned .app (no codesign)
         script: |
-          cd ios
+          cd DietScan/ios
           xcodebuild -workspace *.xcworkspace \
             -scheme "$XCODE_SCHEME" \
             -configuration Debug \
@@ -113,18 +119,18 @@ workflows:
             build
       - name: Package unsigned IPA
         script: |
-          cd ios/build/Build/Products/Debug-iphoneos
+          cd DietScan/ios/build/Build/Products/Debug-iphoneos
           mkdir -p Payload
           cp -r *.app Payload/
           zip -r DietScan-dev-unsigned.ipa Payload
     artifacts:
-      - ios/build/Build/Products/Debug-iphoneos/*.ipa
+      - DietScan/ios/build/Build/Products/Debug-iphoneos/*.ipa
     publishing:
       scripts:
         - name: Copy to Runnables
           script: |
             mkdir -p "$OUTPUT_DIR"
-            cp ios/build/Build/Products/Debug-iphoneos/*.ipa "$OUTPUT_DIR"/
+            cp DietScan/ios/build/Build/Products/Debug-iphoneos/*.ipa "$OUTPUT_DIR"/
 
   # iOS RELEASE
   ios-release:
@@ -143,21 +149,23 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: "main"
+        - pattern: "master"
           include: true
     scripts:
       - name: Install dependencies
         script: |
+          cd DietScan
           npm ci
       - name: Prebuild (generate native ios project)
         script: |
+          cd DietScan
           npx expo prebuild --platform ios --clean
       - name: Install pods
         script: |
-          cd ios && pod install
+          cd DietScan/ios && pod install
       - name: Build unsigned .app (no codesign)
         script: |
-          cd ios
+          cd DietScan/ios
           xcodebuild -workspace *.xcworkspace \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
@@ -168,15 +176,15 @@ workflows:
             build
       - name: Package unsigned IPA
         script: |
-          cd ios/build/Build/Products/Release-iphoneos
+          cd DietScan/ios/build/Build/Products/Release-iphoneos
           mkdir -p Payload
           cp -r *.app Payload/
           zip -r DietScan-unsigned.ipa Payload
     artifacts:
-      - ios/build/Build/Products/Release-iphoneos/*.ipa
+      - DietScan/ios/build/Build/Products/Release-iphoneos/*.ipa
     publishing:
       scripts:
         - name: Copy to Runnables
           script: |
             mkdir -p "$OUTPUT_DIR"
-            cp ios/build/Build/Products/Release-iphoneos/*.ipa "$OUTPUT_DIR"/
+            cp DietScan/ios/build/Build/Products/Release-iphoneos/*.ipa "$OUTPUT_DIR"/
