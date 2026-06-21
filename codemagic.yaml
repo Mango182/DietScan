@@ -1,0 +1,195 @@
+## codemagic.yaml — DietScan
+## Mirrors the CareerLog pipeline: 4 workflows (Android dev/release, iOS dev/release),
+## unsigned IPAs for AltStore sideloading, dynamic bundle ID via app.config.js (APP_VARIANT).
+
+workflows:
+
+  # ---------------------------------------------------------------------
+  # ANDROID — DEV
+  # ---------------------------------------------------------------------
+  android-dev:
+    name: DietScan - Android Dev
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      node: 22
+      vars:
+        APP_VARIANT: "development"
+        OUTPUT_DIR: "Runnables/android-dev"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "develop"
+          include: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Prebuild (generate native android project)
+        script: |
+          npx expo prebuild --platform android --clean
+      - name: Build debug APK
+        script: |
+          cd android
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
+    publishing:
+      scripts:
+        - name: Copy to Runnables
+          script: |
+            mkdir -p "$OUTPUT_DIR"
+            cp android/app/build/outputs/apk/debug/*.apk "$OUTPUT_DIR"/
+
+  # ---------------------------------------------------------------------
+  # ANDROID — RELEASE
+  # ---------------------------------------------------------------------
+  android-release:
+    name: DietScan - Android Release
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      node: 22
+      vars:
+        APP_VARIANT: "production"
+        OUTPUT_DIR: "Runnables/android-release"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "main"
+          include: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Prebuild (generate native android project)
+        script: |
+          npx expo prebuild --platform android --clean
+      - name: Build release APK (unsigned)
+        script: |
+          cd android
+          ./gradlew assembleRelease
+    artifacts:
+      - android/app/build/outputs/apk/release/*.apk
+    publishing:
+      scripts:
+        - name: Copy to Runnables
+          script: |
+            mkdir -p "$OUTPUT_DIR"
+            cp android/app/build/outputs/apk/release/*.apk "$OUTPUT_DIR"/
+
+  # ---------------------------------------------------------------------
+  # iOS — DEV (unsigned IPA for AltStore)
+  # ---------------------------------------------------------------------
+  ios-dev:
+    name: DietScan - iOS Dev
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_VARIANT: "development"
+        OUTPUT_DIR: "Runnables/ios-dev"
+        XCODE_SCHEME: "DietScanDev"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "develop"
+          include: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Prebuild (generate native ios project)
+        script: |
+          npx expo prebuild --platform ios --clean
+      - name: Install pods
+        script: |
+          cd ios && pod install
+      - name: Build unsigned .app (no codesign)
+        script: |
+          cd ios
+          xcodebuild -workspace *.xcworkspace \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+      - name: Package unsigned IPA
+        script: |
+          cd ios/build/Build/Products/Debug-iphoneos
+          mkdir -p Payload
+          cp -r *.app Payload/
+          zip -r DietScan-dev-unsigned.ipa Payload
+    artifacts:
+      - ios/build/Build/Products/Debug-iphoneos/*.ipa
+    publishing:
+      scripts:
+        - name: Copy to Runnables
+          script: |
+            mkdir -p "$OUTPUT_DIR"
+            cp ios/build/Build/Products/Debug-iphoneos/*.ipa "$OUTPUT_DIR"/
+
+  # ---------------------------------------------------------------------
+  # iOS — RELEASE (unsigned IPA for AltStore)
+  # ---------------------------------------------------------------------
+  ios-release:
+    name: DietScan - iOS Release
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_VARIANT: "production"
+        OUTPUT_DIR: "Runnables/ios-release"
+        XCODE_SCHEME: "DietScan"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "main"
+          include: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Prebuild (generate native ios project)
+        script: |
+          npx expo prebuild --platform ios --clean
+      - name: Install pods
+        script: |
+          cd ios && pod install
+      - name: Build unsigned .app (no codesign)
+        script: |
+          cd ios
+          xcodebuild -workspace *.xcworkspace \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+      - name: Package unsigned IPA
+        script: |
+          cd ios/build/Build/Products/Release-iphoneos
+          mkdir -p Payload
+          cp -r *.app Payload/
+          zip -r DietScan-unsigned.ipa Payload
+    artifacts:
+      - ios/build/Build/Products/Release-iphoneos/*.ipa
+    publishing:
+      scripts:
+        - name: Copy to Runnables
+          script: |
+            mkdir -p "$OUTPUT_DIR"
+            cp ios/build/Build/Products/Release-iphoneos/*.ipa "$OUTPUT_DIR"/
