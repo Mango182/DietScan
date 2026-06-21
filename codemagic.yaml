@@ -8,7 +8,8 @@ workflows:
       node: 22
       vars:
         APP_VARIANT: "development"
-        OUTPUT_DIR: "Runnables/android-dev"
+      groups:
+        - github_credentials   # provides GITHUB_TOKEN
     triggering:
       events:
         - push
@@ -28,14 +29,20 @@ workflows:
         script: |
           cd DietScan/android
           ./gradlew assembleDebug
+      - name: Push APK to GitHub
+        script: |
+          git config --global user.email "codemagic-bot@dietscan.com"
+          git config --global user.name "Codemagic Bot"
+          git remote set-url origin https://$GITHUB_TOKEN@github.com/Mango182/DietScan.git
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          cd "$CM_BUILD_DIR"
+          mkdir -p Runnables
+          cp DietScan/android/app/build/outputs/apk/debug/*.apk Runnables/DietScan-dev.apk
+          git add Runnables/DietScan-dev.apk
+          git commit -m "ci: add Android dev APK [skip ci]"
+          git push origin "$BRANCH_NAME"
     artifacts:
       - DietScan/android/app/build/outputs/apk/debug/*.apk
-    publishing:
-      scripts:
-        - name: Copy to Runnables
-          script: |
-            mkdir -p "$OUTPUT_DIR"
-            cp DietScan/android/app/build/outputs/apk/debug/*.apk "$OUTPUT_DIR"/
 
   # ANDROID RELEASE
   android-release:
@@ -46,7 +53,8 @@ workflows:
       node: 22
       vars:
         APP_VARIANT: "production"
-        OUTPUT_DIR: "Runnables/android-release"
+      groups:
+        - github_credentials
     triggering:
       events:
         - push
@@ -66,14 +74,20 @@ workflows:
         script: |
           cd DietScan/android
           ./gradlew assembleRelease
+      - name: Push APK to GitHub
+        script: |
+          git config --global user.email "codemagic-bot@dietscan.com"
+          git config --global user.name "Codemagic Bot"
+          git remote set-url origin https://$GITHUB_TOKEN@github.com/Mango182/DietScan.git
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          cd "$CM_BUILD_DIR"
+          mkdir -p Runnables
+          cp DietScan/android/app/build/outputs/apk/release/*.apk Runnables/DietScan-release.apk
+          git add Runnables/DietScan-release.apk
+          git commit -m "ci: add Android release APK [skip ci]"
+          git push origin "$BRANCH_NAME"
     artifacts:
       - DietScan/android/app/build/outputs/apk/release/*.apk
-    publishing:
-      scripts:
-        - name: Copy to Runnables
-          script: |
-            mkdir -p "$OUTPUT_DIR"
-            cp DietScan/android/app/build/outputs/apk/release/*.apk "$OUTPUT_DIR"/
 
   # iOS DEV
   ios-dev:
@@ -86,8 +100,9 @@ workflows:
       cocoapods: default
       vars:
         APP_VARIANT: "development"
-        OUTPUT_DIR: "Runnables/ios-dev"
         XCODE_SCHEME: "DietScanDev"
+      groups:
+        - github_credentials
     triggering:
       events:
         - push
@@ -123,14 +138,20 @@ workflows:
           mkdir -p Payload
           cp -r *.app Payload/
           zip -r DietScan-dev-unsigned.ipa Payload
+      - name: Push IPA to GitHub
+        script: |
+          git config --global user.email "codemagic-bot@dietscan.com"
+          git config --global user.name "Codemagic Bot"
+          git remote set-url origin https://$GITHUB_TOKEN@github.com/Mango182/DietScan.git
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          cd "$CM_BUILD_DIR"
+          mkdir -p Runnables
+          cp DietScan/ios/build/Build/Products/Debug-iphoneos/DietScan-dev-unsigned.ipa Runnables/DietScan-dev-unsigned.ipa
+          git add Runnables/DietScan-dev-unsigned.ipa
+          git commit -m "ci: add iOS dev IPA [skip ci]"
+          git push origin "$BRANCH_NAME"
     artifacts:
       - DietScan/ios/build/Build/Products/Debug-iphoneos/*.ipa
-    publishing:
-      scripts:
-        - name: Copy to Runnables
-          script: |
-            mkdir -p "$OUTPUT_DIR"
-            cp DietScan/ios/build/Build/Products/Debug-iphoneos/*.ipa "$OUTPUT_DIR"/
 
   # iOS RELEASE
   ios-release:
@@ -143,8 +164,9 @@ workflows:
       cocoapods: default
       vars:
         APP_VARIANT: "production"
-        OUTPUT_DIR: "Runnables/ios-release"
         XCODE_SCHEME: "DietScan"
+      groups:
+        - github_credentials
     triggering:
       events:
         - push
@@ -180,11 +202,17 @@ workflows:
           mkdir -p Payload
           cp -r *.app Payload/
           zip -r DietScan-unsigned.ipa Payload
+      - name: Push IPA to GitHub
+        script: |
+          git config --global user.email "codemagic-bot@dietscan.com"
+          git config --global user.name "Codemagic Bot"
+          git remote set-url origin https://$GITHUB_TOKEN@github.com/Mango182/DietScan.git
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          cd "$CM_BUILD_DIR"
+          mkdir -p Runnables
+          cp DietScan/ios/build/Build/Products/Release-iphoneos/DietScan-unsigned.ipa Runnables/DietScan-release-unsigned.ipa
+          git add Runnables/DietScan-release-unsigned.ipa
+          git commit -m "ci: add iOS release IPA [skip ci]"
+          git push origin "$BRANCH_NAME"
     artifacts:
       - DietScan/ios/build/Build/Products/Release-iphoneos/*.ipa
-    publishing:
-      scripts:
-        - name: Copy to Runnables
-          script: |
-            mkdir -p "$OUTPUT_DIR"
-            cp DietScan/ios/build/Build/Products/Release-iphoneos/*.ipa "$OUTPUT_DIR"/
