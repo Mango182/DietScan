@@ -1,0 +1,139 @@
+# Reusable build workflow (ported from codemagic.yaml).
+# Called by dev.yml and release.yml — not triggered directly.
+#
+# For each platform it: installs deps -> expo prebuild --clean -> native build
+# -> uploads the binary as a workflow artifact (download it from the run page).
+# Nothing is committed back to the repo.
+
+name: Build (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      variant:
+        description: "development | production (maps to APP_VARIANT in app.config.js)"
+        required: true
+        type: string
+      platforms:
+        description: "all | android | ios"
+        required: false
+        type: string
+        default: all
+
+permissions:
+  contents: read
+
+env:
+  APP_VARIANT: ${{ inputs.variant }}
+  # Derived names, mirroring the Codemagic workflows
+  BUILD_CONFIG: ${{ inputs.variant == 'development' && 'Debug' || 'Release' }}
+  FILE_SUFFIX: ${{ inputs.variant == 'development' && 'dev' || 'release' }}
+
+jobs:
+  android:
+    if: inputs.platforms == 'all' || inputs.platforms == 'android'
+    name: Android (${{ inputs.variant }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: DietScan/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install dependencies
+        working-directory: DietScan
+        run: npm ci --legacy-peer-deps
+
+      - name: Prebuild (generate native android project)
+        working-directory: DietScan
+        run: npx expo prebuild --platform android --clean
+
+      - name: Build APK
+        working-directory: DietScan/android
+        run: |
+          if [ "$BUILD_CONFIG" = "Debug" ]; then
+            ./gradlew assembleDebug
+          else
+            ./gradlew assembleRelease
+          fi
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          CONFIG_DIR=$(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]')
+          cp DietScan/android/app/build/outputs/apk/$CONFIG_DIR/*.apk "out/DietScan-$FILE_SUFFIX.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DietScan-${{ env.FILE_SUFFIX }}-android
+          path: out/*.apk
+          retention-days: 14
+
+  ios:
+    if: inputs.platforms == 'all' || inputs.platforms == 'ios'
+    name: iOS (${{ inputs.variant }})
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      XCODE_SCHEME: ${{ inputs.variant == 'development' && 'DietScanDev' || 'DietScan' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: DietScan/package-lock.json
+
+      - name: Install dependencies
+        working-directory: DietScan
+        run: npm ci --legacy-peer-deps
+
+      - name: Prebuild (generate native ios project)
+        working-directory: DietScan
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Install pods
+        working-directory: DietScan/ios
+        run: pod install
+
+      - name: Build unsigned .app (no codesign)
+        working-directory: DietScan/ios
+        run: |
+          xcodebuild -workspace *.xcworkspace \
+            -scheme "$XCODE_SCHEME" \
+            -configuration "$BUILD_CONFIG" \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p out
+          cd "DietScan/ios/build/Build/Products/$BUILD_CONFIG-iphoneos"
+          mkdir -p Payload
+          cp -r *.app Payload/
+          zip -qr "$GITHUB_WORKSPACE/out/DietScan-$FILE_SUFFIX.ipa" Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DietScan-${{ env.FILE_SUFFIX }}-ios
+          path: out/*.ipa
+          retention-days: 14
