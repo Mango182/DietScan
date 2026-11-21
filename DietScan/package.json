@@ -1,8 +1,10 @@
 {
   "name": "dietscan",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry.js",
   "dependencies": {
+    "@expo/material-symbols": "^0.1.1",
+    "@expo/ui": "~56.0.18",
     "@react-native-ml-kit/text-recognition": "^2.0.0",
     "expo": "~56.0.24",
     "expo-camera": "~56.0.8",
