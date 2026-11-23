@@ -74,7 +74,7 @@ jobs:
           CONFIG_DIR=$(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]')
           cp DietScan/android/app/build/outputs/apk/$CONFIG_DIR/*.apk "out/DietScan-$FILE_SUFFIX.apk"
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: DietScan-${{ env.FILE_SUFFIX }}-android
           path: out/*.apk
@@ -138,7 +138,7 @@ jobs:
           cp -r *.app Payload/
           zip -qr "$GITHUB_WORKSPACE/out/DietScan-$FILE_SUFFIX.ipa" Payload
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: DietScan-${{ env.FILE_SUFFIX }}-ios
           path: out/*.ipa
