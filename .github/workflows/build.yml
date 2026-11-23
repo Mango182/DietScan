@@ -83,7 +83,7 @@ jobs:
   ios:
     if: inputs.platforms == 'all' || inputs.platforms == 'ios'
     name: iOS (${{ inputs.variant }})
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 90
     env:
       XCODE_SCHEME: ${{ inputs.variant == 'development' && 'DietScanDev' || 'DietScan' }}
@@ -115,6 +115,7 @@ jobs:
       - name: Build unsigned .app (no codesign)
         working-directory: DietScan/ios
         run: |
+          set -o pipefail
           xcodebuild -workspace *.xcworkspace \
             -scheme "$XCODE_SCHEME" \
             -configuration "$BUILD_CONFIG" \
@@ -122,7 +123,12 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            build
+            build 2>&1 | tee xcodebuild.log || {
+              echo "::group::xcodebuild errors"
+              grep -E "error:|The following build commands failed" -A 20 xcodebuild.log | head -200
+              echo "::endgroup::"
+              exit 1
+            }
 
       - name: Package unsigned IPA
         run: |
