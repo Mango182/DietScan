@@ -1,14 +1,19 @@
-import { Stack } from "expo-router";
+import { NativeTabs } from 'expo-router/native-tabs';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-export default function RootLayout() {
+export default function TabLayout() {
   return (
-    <Stack screenOptions={{
-      headerShown: false,
-    }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="review" options={{ headerShown: false }} />
-      <Stack.Screen name="history" options={{ headerShown: false }} />
-    </Stack>
+    <SafeAreaProvider>
+      <NativeTabs>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="history">
+        <NativeTabs.Trigger.Icon sf="clock" md="history" />
+        <NativeTabs.Trigger.Label>History</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
+    </SafeAreaProvider>
   );
-
 }

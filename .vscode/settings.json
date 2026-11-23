@@ -1,3 +1,5 @@
 {
-    "yaml.schemaStore.enable": false
+    "yaml.schemaStore.enable": false,
+    "typescript.tsdk": "DietScan/node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
 }
