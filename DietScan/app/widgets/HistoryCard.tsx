@@ -7,7 +7,7 @@ function HistoryCard() {
   // View Icon
   const VIEW = Icon.select({
     ios: 'eye',
-    android: require('@expo/material-symbols/eye.xml'),
+    android: require('@expo/material-symbols/visibility.xml'),
   });
 
   // Delete Icon
