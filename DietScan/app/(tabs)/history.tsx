@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native"
-import HistoryCard from "./widgets/HistoryCard"
-import HistoryCalender from "./widgets/HistoryCalender"
+import HistoryCard from "@/components/HistoryCard"
+import HistoryCalender from "@/components/HistoryCalender/HistoryCalender"
 export default function history() {
   return (
     <View style={styles.container}>
